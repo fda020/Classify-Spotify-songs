@@ -23,8 +23,8 @@ print(Pop_df.shape) #9386 Pop songs
 CP_df = pd.concat([Classical_df, Pop_df])
 print(CP_df)
 
-#To make the dataframe smaller with genre, artist name, track name, track id, liveness and loudness
-CP_shorten = CP_df[['genre', 'artist_name', 'track_name', 'track_id','liveness', 'loudness']]
+#To make the dataframe smaller with liveness and loudness
+CP_shorten = CP_df[['liveness', 'loudness']]
 print(CP_shorten)
 
 #Matrix where rows are songs and the two columns are liveness and loudness
@@ -52,5 +52,5 @@ split_index = int(split_ratio * len(songs))
 songs_train = songs[:split_index]
 genre_train = genre[:split_index]
 
-songs_train = songs[split_index:]
-genre_train = genre[split_index:]
+songs_test = songs[split_index:]
+genre_test = genre[split_index:]
