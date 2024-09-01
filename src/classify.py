@@ -39,13 +39,52 @@ class train_and_test():
         self.matrix_test = split_matrix[split_index:]
         self.vector_test = split_vector[split_index:]
 
+# bruker den til å train data også bruke test data for å teste modellen som er laget
+class Log_Reg():
+    def __init__(self, matrix):
+        self.matrix = matrix
+        self.num_sample = len(self.matrix)
+        self.num_features = len(self.matrix[0])
 
-# class Log_Reg():
-#     def __init__(self):
-#         pass
+        print(self.num_features, self.num_sample)
+        self.weight = np.zeros(self.num_features)
+        self.bias = 0
+        
 
-#     def sigmoid(x):
-#         return 1/(1 + np.exp(-x))
+    def sigmoid(self, x): #here x train 
+        z = np.matmul(x, self.weight) + self.bias
+        y_pred = 1/(1 + np.exp(-z))
+        return y_pred
+    
+    def loss(self, y_true, y_pred): # y pred er y_pred (fra sigmoid) og y true er y train vector
+        loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+        return loss
+    
+    def stoch_grad_desc(self, x, y, learning_rate, num_epochs):
+        self.learning_rate = learning_rate
+        self.num_epochs = num_epochs
+
+        self.training_error = []
+
+        for i in range(self.num_epochs):
+            for j in range(self.num_sample):
+                x_new = x[i]
+                y_new = y[j]
+
+                #the sigmoid function
+                # kan brule y_pred = self.sigmoid(x_new)
+                z = np.matmul(x_new, self.weight) + self.bias
+                y_pred = 1/(1 + np.exp(-z))
+
+                #the gradients for weight and bias
+                self.gradients_weight = (y_pred - y_new) * x_new
+                self.gradients_bias = y_pred - y_new
+
+                self.weight -= self.learning_rate * self.gradients_weight
+                self.bias -= self.learning_rate * self.gradients_bias
+
+        
+
 
 
 if __name__== "__main__":
@@ -71,7 +110,7 @@ if __name__== "__main__":
     song_matrix = CP_df.retrieve_matrix()
     print(song_matrix)
 
-    genre_vector = CP_df.retrieve_vector()
+    genre_vector = CP_df.retrieve_vector() 
     print(genre_vector)
     
     train = train_and_test(song_matrix, genre_vector)
@@ -80,8 +119,13 @@ if __name__== "__main__":
 
     matrix_test = train.matrix_test
     vector_test = train.vector_test
-    
+
     print(matrix_train)
+    print(vector_train)
+
+    model = Log_Reg(matrix_train)
+
+    model.stoch_grad_desc(matrix_train, vector_train, 0.02, 40)
 
     
 
