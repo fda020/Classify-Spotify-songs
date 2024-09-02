@@ -51,14 +51,11 @@ class Log_Reg():
         self.weight = np.zeros(self.num_features)
         self.bias = 0
         
-
-    def sigmoid(self, x): #here x train 
-        z = np.matmul(x, self.weight) + self.bias
-        y_pred = 1/(1 + np.exp(-z))
-        return y_pred
     
     def loss(self, y_true, y_pred): # y pred er y_pred (fra sigmoid) og y true er y train vector
-        loss = -np.mean(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
+        epsilon = 1e-10 # to avoid log(0)
+        y_pred_clipped = np.clip(y_pred, epsilon, 1 - epsilon) #use clipping, get value near 0
+        loss = -np.mean(y_true * np.log(y_pred_clipped) + (1 - y_true) * np.log(1 - y_pred_clipped)) #binary cross entropy loss formula
         return loss
     
     def stoch_grad_desc(self, x, y, learning_rate, num_epochs):
@@ -66,10 +63,10 @@ class Log_Reg():
         self.num_epochs = num_epochs
 
         self.training_error = []
-
+        
         for i in range(self.num_epochs):
             for j in range(self.num_sample):
-                x_new = x[i]
+                x_new = x[j]
                 y_new = y[j]
 
                 #the sigmoid function
@@ -83,8 +80,16 @@ class Log_Reg():
 
                 self.weight -= self.learning_rate * self.gradients_weight
                 self.bias -= self.learning_rate * self.gradients_bias
+            
+            z = np.matmul(x, self.weight) + self.bias
+            y_pred_acc = 1 / (1 + np.exp(-z)) >= 0.5
+            accuracy = np.mean(y_pred_acc == y)
 
+            loss = self.loss(y, y_pred_acc) 
+            self.training_error.append(loss)
         
+        print(accuracy)
+            
 
 
 
@@ -122,12 +127,19 @@ if __name__== "__main__":
     matrix_test = train.matrix_test
     vector_test = train.vector_test
 
-    print(matrix_train)
+    #print(matrix_train)
     print(vector_train)
 
     model = Log_Reg(matrix_train)
+    model.stoch_grad_desc(matrix_train, vector_train, 0.2, 200)
 
-    model.stoch_grad_desc(matrix_train, vector_train, 0.02, 40)
+    plt.plot(model.training_error, color = 'blue')
+    plt.xlabel('Epoch')
+    plt.ylabel('Training Error')
+    plt.show()
+
+
+    
 
     
 
