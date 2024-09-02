@@ -5,17 +5,18 @@ import display
 
 class DataFrame():
     def __init__(self, datafile):
-        self.all_df = pd.read_csv(datafile,comment = '#', delimiter=',', header=0)
+
+        self.all_df = pd.read_csv(datafile, delimiter=',', header=0)
 
     def filtering(self, heading, filter, ind):
-        self.filter_df = self.all_df.loc[self.all_df[heading] == filter]
-        self.filter_df.index = [ind] * len(self.filter_df)
-
+        self.all_df = self.all_df.loc[self.all_df[heading] == filter]
+        self.all_df['label'] = ind
+        
     def retrieve_matrix(self):
-        return np.transpose(np.array([self.filter_df['liveness'],self.filter_df['loudness']]))
+        return np.transpose(np.array([self.all_df['liveness'],self.all_df['loudness']]))
     
     def retrieve_vector(self):
-        return np.array(self.filter_df.index)
+        return np.array(self.all_df['label'])
     
 class train_and_test():
     def __init__(self, matrix, vector):
@@ -26,8 +27,8 @@ class train_and_test():
         #make the matrix and the vector by splitting
         split_matrix = combine[:, 1:]
         split_vector = combine[:, 0]
-        print(split_matrix.shape)
-        print(split_vector.shape)
+        print(split_matrix)
+        print(split_vector)
 
         split_ratio = 0.8
         split_index = int(split_ratio * len(split_matrix))
@@ -91,27 +92,28 @@ if __name__== "__main__":
     display.dataframe_display()
     dataframe = DataFrame("../csv/SpotifyFeatures.csv")
     print(dataframe.all_df.shape) #232725 songs and 18 features 
+    print(dataframe.all_df)
 
     Classical_df = DataFrame("../csv/SpotifyFeatures.csv")
     Classical_df.filtering('genre', 'Classical', 0) 
-    print(Classical_df.filter_df.shape) #9256 Classical songs
+    print(Classical_df.all_df.shape) #9256 Classical songs
 
     Pop_df = DataFrame("../csv/SpotifyFeatures.csv")
     Pop_df.filtering('genre', 'Pop', 1) 
-    print(Pop_df.filter_df.shape) #9386 Pop songs
+    print(Pop_df.all_df.shape) #9386 Pop songs
     
     # Put the dataframes together
     CP_df = DataFrame("../csv/SpotifyFeatures.csv")
-    CP_df.filter_df = pd.concat([Classical_df.filter_df, Pop_df.filter_df])
+    CP_df.all_df = pd.concat([Classical_df.all_df, Pop_df.all_df])
     #Make dataframe to only view liveness and loudness 
-    CP_df.filter_df = CP_df.filter_df[['liveness', 'loudness']]
-    print(CP_df.filter_df)
+    CP_df.all_df = CP_df.all_df[['liveness', 'loudness', 'label']]
+    # print(CP_df.all_df)
 
     song_matrix = CP_df.retrieve_matrix()
-    print(song_matrix)
+    # print(song_matrix)
 
     genre_vector = CP_df.retrieve_vector() 
-    print(genre_vector)
+    # print(genre_vector)
     
     train = train_and_test(song_matrix, genre_vector)
     matrix_train = train.matrix_train
