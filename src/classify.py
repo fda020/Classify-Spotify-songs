@@ -89,7 +89,20 @@ class Log_Reg():
             self.training_error.append(loss)
         
         print(accuracy)
+
+    def prediction(self, test_X):
+        z = np.matmul(test_X, self.weight) + self.bias 
+        y_pred = 1/(1 + np.exp(-z)) >= 0.5
+        return y_pred
             
+def confusion_matrix(vector_test, y_pred_test):
+    tp = np.sum((vector_test == 1)) & np.sum((y_pred_test == 1)) #true positive
+    tn = np.sum((vector_test == 0)) & np.sum((y_pred_test == 0)) #true negative
+    fp = np.sum((vector_test == 0)) & np.sum((y_pred_test == 1)) #false positive
+    fn = np.sum((vector_test == 1)) & np.sum((y_pred_test == 0)) #false negative
+
+    conf_matrix = np.array([[tn, fp], [fn, tp]])
+    print(conf_matrix)
 
 
 
@@ -137,6 +150,13 @@ if __name__== "__main__":
     plt.xlabel('Epoch')
     plt.ylabel('Training Error')
     plt.show()
+
+    test_model = model.prediction(matrix_test)
+    test_acc = np.mean(test_model == vector_test)
+    print(test_acc)
+
+    conf_matrix = confusion_matrix(vector_test, test_model)
+
 
 
     
