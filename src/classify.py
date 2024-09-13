@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import display
+from sklearn.preprocessing import StandardScaler
+
 
 class DataFrame():
     def __init__(self, datafile):
@@ -12,7 +14,7 @@ class DataFrame():
         self.all_df['label'] = ind
         
     def retrieve_matrix(self):
-        return np.transpose(np.array([self.all_df['liveness'],self.all_df['loudness'], self.all_df['energy'], self.all_df['instrumentalness']]))
+        return np.transpose(np.array([self.all_df['liveness'],self.all_df['loudness'], self.all_df['energy'], self.all_df['instrumentalness'], self.all_df['danceability'], self.all_df['tempo'], self.all_df['acousticness']]))
     
     def retrieve_vector(self):
         return np.array(self.all_df['label'])
@@ -126,14 +128,14 @@ if __name__== "__main__":
     print(Classical_df.all_df.shape) #9256 Classical songs
 
     Pop_df = DataFrame("../csv/SpotifyFeatures.csv")
-    Pop_df.filtering('genre', 'Pop', 1)
+    Pop_df.filtering('genre', 'Electronic', 1)
     print(Pop_df.all_df.shape) #9386 Pop songs
     
     # Put the dataframes together
     CP_df = DataFrame("../csv/SpotifyFeatures.csv")
     CP_df.all_df = pd.concat([Classical_df.all_df, Pop_df.all_df])
     #Make dataframe to only view liveness and loudness 
-    CP_df.all_df = CP_df.all_df[['liveness', 'loudness','energy', 'instrumentalness', 'label']]
+    CP_df.all_df = CP_df.all_df[['liveness', 'loudness','energy', 'instrumentalness', 'danceability', 'tempo','acousticness', 'label']]
     # print(CP_df.all_df)
 
     song_matrix = CP_df.retrieve_matrix()
@@ -141,12 +143,18 @@ if __name__== "__main__":
 
     genre_vector = CP_df.retrieve_vector() 
     # print(genre_vector)
-    
+
+    scaler = StandardScaler()
+  
     train = train_and_test(song_matrix, genre_vector)
     matrix_train = train.matrix_train
+    matrix_train_scaled = scaler.fit_transform(matrix_train)
+
     vector_train = train.vector_train
 
     matrix_test = train.matrix_test
+    matrix_test_scaled = scaler.transform(matrix_test)
+
     vector_test = train.vector_test
 
     #print(matrix_train)
@@ -154,26 +162,27 @@ if __name__== "__main__":
 
     #the train matrix is used in the model to train it
     model = Log_Reg(matrix_train)
-    model.stoch_grad_desc(matrix_train, vector_train, 0.001, 100)
+    model.stoch_grad_desc(matrix_train_scaled, vector_train, 0.0005, 300)
 
-    plt.plot(model.training_error, color = 'blue')
-    plt.xlabel('Epoch')
-    plt.ylabel('Training Error')
-    plt.show()
+    # plt.plot(model.training_error, color = 'blue')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Training Error')
+    # plt.show()
 
-    test_model = model.prediction(matrix_test)
+    test_model = model.prediction(matrix_test_scaled)
     test_acc = np.mean(test_model == vector_test)
     print('test accuracy', test_acc)
 
     conf_matrix = confusion_matrix(vector_test, test_model)
 
-   #liveness, loudness, energy, instrumentalness
-    new_song_features = np.array([[0.020286373794078827,0.1393725872039795, 0.1393725872039795, 123.046875 ]]) 
+   #liveness, loudness, energy, instrumentalness, danceability, tempo, acousticness
+    new_song_features = np.array([[0.038069531321525574,0.04384080693125725, 0.04384080693125725, 0.6781216263771057, 1.77617471, 135.99917763,  0.6781216263771057 ]]) 
+    new_song_features_scaled = scaler.transform(new_song_features)
 
-    predicted_genre = model.prediction(new_song_features)
+    predicted_genre = model.prediction(new_song_features_scaled)
 
     # Check the result
     if predicted_genre[0]:
-        print("The song is predicted to be Pop.")
+        print("The song is predicted to be Electronic.")
     else:
         print("The song is predicted to be Rock.")
