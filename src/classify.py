@@ -12,7 +12,7 @@ class DataFrame():
         self.all_df['label'] = ind
         
     def retrieve_matrix(self):
-        return np.transpose(np.array([self.all_df['liveness'],self.all_df['loudness']]))
+        return np.transpose(np.array([self.all_df['liveness'],self.all_df['loudness'], self.all_df['energy'], self.all_df['instrumentalness']]))
     
     def retrieve_vector(self):
         return np.array(self.all_df['label'])
@@ -115,8 +115,6 @@ def confusion_matrix(vector_test, y_pred_test):
     conf_matrix = np.array([[tp, fp], [fn, tn]])
     print(conf_matrix)
 
-
-
 if __name__== "__main__":
     display.dataframe_display()
     dataframe = DataFrame("../csv/SpotifyFeatures.csv")
@@ -124,7 +122,7 @@ if __name__== "__main__":
     # print(dataframe.all_df)
 
     Classical_df = DataFrame("../csv/SpotifyFeatures.csv")
-    Classical_df.filtering('genre', 'Classical', 0) 
+    Classical_df.filtering('genre', 'Rock', 0) 
     print(Classical_df.all_df.shape) #9256 Classical songs
 
     Pop_df = DataFrame("../csv/SpotifyFeatures.csv")
@@ -135,7 +133,7 @@ if __name__== "__main__":
     CP_df = DataFrame("../csv/SpotifyFeatures.csv")
     CP_df.all_df = pd.concat([Classical_df.all_df, Pop_df.all_df])
     #Make dataframe to only view liveness and loudness 
-    CP_df.all_df = CP_df.all_df[['liveness', 'loudness', 'label']]
+    CP_df.all_df = CP_df.all_df[['liveness', 'loudness','energy', 'instrumentalness', 'label']]
     # print(CP_df.all_df)
 
     song_matrix = CP_df.retrieve_matrix()
@@ -168,3 +166,14 @@ if __name__== "__main__":
     print('test accuracy', test_acc)
 
     conf_matrix = confusion_matrix(vector_test, test_model)
+
+   #liveness, loudness, energy, instrumentalness
+    new_song_features = np.array([[0.020286373794078827,0.1393725872039795, 0.1393725872039795, 123.046875 ]]) 
+
+    predicted_genre = model.prediction(new_song_features)
+
+    # Check the result
+    if predicted_genre[0]:
+        print("The song is predicted to be Pop.")
+    else:
+        print("The song is predicted to be Rock.")
